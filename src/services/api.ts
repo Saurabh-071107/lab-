@@ -251,13 +251,54 @@ export const LabApiService = {
 
   async fetchVaccinations(): Promise<VaccinationBooking[]> {
     try {
-      const res = await fetch(`${BASE_URL}/vaccinations/bookings`, { credentials: 'omit', headers: this.getAuthHeader() });
+      const res = await fetch(`${BASE_URL}/vaccinations/lab/queue`, { credentials: 'omit', headers: this.getAuthHeader() });
       if (res.ok) {
         const data = await res.json();
-        if (data && data.length > 0) return data;
+        if (Array.isArray(data) && data.length > 0) return data;
       }
     } catch (_) {}
     return initialDemoVaccinations;
+  },
+
+  async acceptVaccination(
+    bookingId: string,
+    vaccinatorName: string,
+    vaccinatorPhone: string,
+    batchNumber?: string,
+    coldChainStatus?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await fetch(`${BASE_URL}/vaccinations/bookings/${bookingId}/accept`, {
+        method: 'PATCH',
+        headers: this.getAuthHeader(),
+        body: JSON.stringify({ vaccinatorName, vaccinatorPhone, batchNumber, coldChainStatus })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) return { success: true };
+      return { success: false, error: data.error || 'Failed to accept vaccination request.' };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  },
+
+  async verifyVaccinationOtp(
+    bookingId: string,
+    otp: string,
+    remarks?: string,
+    administeredBy?: string
+  ): Promise<{ success: boolean; certificateId?: string; error?: string }> {
+    try {
+      const res = await fetch(`${BASE_URL}/vaccinations/bookings/${bookingId}/verify-otp`, {
+        method: 'POST',
+        headers: this.getAuthHeader(),
+        body: JSON.stringify({ otp, remarks, administeredBy })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) return { success: true, certificateId: data.certificateId };
+      return { success: false, error: data.error || 'Failed to verify vaccination OTP.' };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
   },
 
   async administerVaccination(bookingId: string, technicianName: string, batchNumber: string, remarks?: string): Promise<boolean> {
@@ -278,4 +319,5 @@ export const LabApiService = {
     }
   }
 };
+
 

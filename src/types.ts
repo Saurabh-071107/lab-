@@ -61,6 +61,7 @@ export interface TestReport {
 
 export interface VaccinationBooking {
   id: string;
+  bookingId?: string;
   scheduleId?: string;
   farmerId: string;
   farmerName: string;
@@ -72,13 +73,16 @@ export interface VaccinationBooking {
   animalTag: string;
   species: string;
   vaccineName: string;
-  laboratoryId: string;
-  labName: string;
-  centerName: string;
+  laboratoryId?: string;
+  labName?: string;
+  centerName?: string;
   batchNumber: string;
   bookedDate: string;
   slot: string;
-  status: 'Confirmed' | 'Dispatched' | 'Administered' | 'Cancelled';
+  verificationOtp?: string;
+  assignedVaccinatorName?: string;
+  assignedVaccinatorPhone?: string;
+  status: 'Confirmed' | 'Dispatched' | 'Administered' | 'Cancelled' | 'REQUESTED' | 'CONFIRMED' | 'ACCEPTED' | 'OUT_FOR_VACCINATION' | 'COMPLETED' | string;
   serviceType?: string;
   coldChainMonitored?: boolean;
   coldChainStatus?: string;
@@ -86,6 +90,7 @@ export interface VaccinationBooking {
   certificateId?: string;
   administeredBy?: string;
   certifyingLab?: string;
+  remarks?: string;
   createdAt: string;
 }
 

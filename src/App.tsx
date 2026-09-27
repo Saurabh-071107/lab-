@@ -35,16 +35,16 @@ export const App: React.FC = () => {
   const [selectedDetailsBooking, setSelectedDetailsBooking] = useState<TestBooking | null>(null);
   const [selectedUploadBooking, setSelectedUploadBooking] = useState<TestBooking | null>(null);
 
-  useEffect(() => {
-    const refreshData = () => {
-      LabApiService.fetchQueue().then(data => {
-        if (Array.isArray(data)) setBookings(data);
-      });
-      LabApiService.fetchVaccinations().then(data => {
-        if (Array.isArray(data) && data.length > 0) setVaccinations(data);
-      });
-    };
+  const refreshData = () => {
+    LabApiService.fetchQueue().then(data => {
+      if (Array.isArray(data)) setBookings(data);
+    });
+    LabApiService.fetchVaccinations().then(data => {
+      if (Array.isArray(data) && data.length > 0) setVaccinations(data);
+    });
+  };
 
+  useEffect(() => {
     refreshData();
     const timer = setInterval(refreshData, 5000);
     return () => clearInterval(timer);
@@ -57,7 +57,9 @@ export const App: React.FC = () => {
     b.status === 'IN_TESTING' || 
     b.status === 'TEST_IN_PROGRESS'
   ).length;
-  const pendingVaccinationsCount = vaccinations.filter(v => v.status !== 'Administered').length;
+  const pendingVaccinationsCount = vaccinations.filter(v => 
+    v.status !== 'Administered' && v.status !== 'COMPLETED' && v.status !== 'ADMINISTERED'
+  ).length;
 
   const handleStartTest = async (bookingId: string) => {
     await LabApiService.startTest(bookingId);
@@ -181,6 +183,7 @@ export const App: React.FC = () => {
               vaccinations={vaccinations}
               currentUser={currentUser}
               onAdministerVaccination={handleAdministerVaccination}
+              onRefresh={refreshData}
             />
           )}
 
