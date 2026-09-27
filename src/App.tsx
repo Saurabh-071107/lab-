@@ -9,8 +9,9 @@ import { UploadReportModal } from './views/UploadReportModal';
 import { CompletedTestsView } from './views/CompletedTestsView';
 import { TestHistoryView } from './views/TestHistoryView';
 import { ProfileView } from './views/ProfileView';
-import { LabApiService, initialDemoBookings } from './services/api';
-import { LabNavTab, LabStaffUser, TestBooking, TestReport } from './types';
+import { VaccinationQueueView } from './views/VaccinationQueueView';
+import { LabApiService, initialDemoBookings, initialDemoVaccinations } from './services/api';
+import { LabNavTab, LabStaffUser, TestBooking, TestReport, VaccinationBooking } from './types';
 
 const defaultUser: LabStaffUser = {
   id: 'usr-lab-1',
@@ -27,6 +28,7 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<LabNavTab>('dashboard');
   const [currentUser, setCurrentUser] = useState<LabStaffUser>(defaultUser);
   const [bookings, setBookings] = useState<TestBooking[]>(initialDemoBookings);
+  const [vaccinations, setVaccinations] = useState<VaccinationBooking[]>(initialDemoVaccinations);
   
   // Modals
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -34,17 +36,27 @@ export const App: React.FC = () => {
   const [selectedUploadBooking, setSelectedUploadBooking] = useState<TestBooking | null>(null);
 
   useEffect(() => {
-    LabApiService.fetchQueue().then(data => {
-      if (data && data.length > 0) setBookings(data);
-    });
+    const refreshData = () => {
+      LabApiService.fetchQueue().then(data => {
+        if (Array.isArray(data)) setBookings(data);
+      });
+      LabApiService.fetchVaccinations().then(data => {
+        if (Array.isArray(data) && data.length > 0) setVaccinations(data);
+      });
+    };
+
+    refreshData();
+    const timer = setInterval(refreshData, 5000);
+    return () => clearInterval(timer);
   }, []);
 
   const pendingCount = bookings.filter(b => b.status === 'TEST_BOOKED' || b.status === 'TEST_IN_PROGRESS').length;
+  const pendingVaccinationsCount = vaccinations.filter(v => v.status !== 'Administered').length;
 
   const handleStartTest = async (bookingId: string) => {
     await LabApiService.startTest(bookingId);
     setBookings(prev => prev.map(b => {
-      if (b.id === bookingId) {
+      if (b.id === bookingId || b.bookingId === bookingId) {
         return {
           ...b,
           status: 'TEST_IN_PROGRESS',
@@ -54,16 +66,41 @@ export const App: React.FC = () => {
       }
       return b;
     }));
+    LabApiService.fetchQueue().then(data => {
+      if (Array.isArray(data)) setBookings(data);
+    });
+  };
+
+  const handleAdministerVaccination = async (
+    bookingId: string,
+    technicianName: string,
+    batchNumber: string,
+    remarks?: string
+  ) => {
+    await LabApiService.administerVaccination(bookingId, technicianName, batchNumber, remarks);
+    setVaccinations(prev => prev.map(v => {
+      if (v.id === bookingId) {
+        return {
+          ...v,
+          status: 'Administered',
+          batchNumber,
+          administeredBy: technicianName,
+          certificateIssued: true,
+          certificateId: `CERT-VAC-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`
+        };
+      }
+      return v;
+    }));
   };
 
   const handleSubmitReport = async (bookingId: string, reportData: Partial<TestReport>) => {
     await LabApiService.uploadReport(bookingId, reportData);
     setBookings(prev => prev.map(b => {
-      if (b.id === bookingId) {
+      if (b.id === bookingId || b.bookingId === bookingId) {
         const fullReport: TestReport = {
           id: `RPT-${Math.floor(100000 + Math.random() * 900000)}`,
           reportId: `RPT-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-          bookingId: b.bookingId,
+          bookingId: b.bookingId || bookingId,
           animalId: b.animalId,
           animalTag: b.animalTag,
           caseId: b.caseId,
@@ -88,6 +125,9 @@ export const App: React.FC = () => {
       }
       return b;
     }));
+    LabApiService.fetchQueue().then(data => {
+      if (Array.isArray(data)) setBookings(data);
+    });
   };
 
   return (
@@ -96,6 +136,7 @@ export const App: React.FC = () => {
         activeTab={activeTab} 
         onTabChange={setActiveTab} 
         pendingCount={pendingCount} 
+        pendingVaccinationsCount={pendingVaccinationsCount}
       />
 
       <div className="main-content">
@@ -121,6 +162,14 @@ export const App: React.FC = () => {
               onOpenTestDetails={setSelectedDetailsBooking}
               onOpenUploadReport={setSelectedUploadBooking}
               onStartTest={handleStartTest}
+            />
+          )}
+
+          {activeTab === 'vaccinations' && (
+            <VaccinationQueueView
+              vaccinations={vaccinations}
+              currentUser={currentUser}
+              onAdministerVaccination={handleAdministerVaccination}
             />
           )}
 

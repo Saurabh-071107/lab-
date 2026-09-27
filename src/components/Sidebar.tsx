@@ -6,7 +6,8 @@ import {
   History, 
   UserCircle2, 
   LogOut,
-  Microscope
+  Microscope,
+  Syringe
 } from 'lucide-react';
 import { LabNavTab } from '../types';
 
@@ -14,16 +15,24 @@ interface SidebarProps {
   activeTab: LabNavTab;
   onTabChange: (tab: LabNavTab) => void;
   pendingCount: number;
+  pendingVaccinationsCount?: number;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, pendingCount }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ 
+  activeTab, 
+  onTabChange, 
+  pendingCount,
+  pendingVaccinationsCount = 0
+}) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'queue', label: 'Test Queue', icon: FlaskConical, badge: pendingCount },
+    { id: 'vaccinations', label: 'Vaccinations', icon: Syringe, badge: pendingVaccinationsCount },
     { id: 'completed', label: 'Completed Tests', icon: CheckCircle2 },
     { id: 'history', label: 'Archive & History', icon: History },
     { id: 'profile', label: 'Staff Profile', icon: UserCircle2 },
   ];
+
 
   return (
     <aside className="sidebar">

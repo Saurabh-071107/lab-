@@ -1,10 +1,7 @@
-import { TestBooking, TestReport } from '../types';
+import { TestBooking, TestReport, VaccinationBooking } from '../types';
 
-const BASE_URL = import.meta.env.VITE_API_URL || (
-  typeof window !== 'undefined' && !window.location.hostname.includes('localhost')
-    ? 'https://pashu-seva-backend.onrender.com/api'
-    : 'http://localhost:5000/api'
-);
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://pashu-seva-backend.onrender.com/api';
+export const SOCKET_URL = BASE_URL.replace('/api', '');
 
 
 // Demo initial test records for robust offline/fallback operation
@@ -93,6 +90,90 @@ export const initialDemoBookings: TestBooking[] = [
   }
 ];
 
+export const initialDemoVaccinations: VaccinationBooking[] = [
+  {
+    id: 'vb-demo-01',
+    scheduleId: 'vac-01',
+    farmerId: 'usr-farmer-1',
+    farmerName: 'Ramesh Patil',
+    farmerPhone: '+91 98221 55667',
+    village: 'Khed, Pune',
+    doorstepAddress: 'Plot 4, Gat No 112, Khed, Pune',
+    animalId: 'ANM-2026-881201',
+    animalName: 'Lakshmi',
+    animalTag: 'ET-893421',
+    species: 'Cattle (Cow)',
+    vaccineName: 'Foot & Mouth Disease (FMD-Oil Adjuvant)',
+    laboratoryId: 'lab-pune-central',
+    labName: 'State Veterinary Biological Diagnostic Research Institute',
+    centerName: 'State Veterinary Biological Diagnostic Research Institute',
+    batchNumber: 'VAC-BIO-FMD-2026',
+    bookedDate: '2026-09-28',
+    slot: 'Morning (09:00 AM - 12:00 PM)',
+    status: 'Confirmed',
+    serviceType: 'Doorstep Cold-Chain Lab Unit',
+    coldChainMonitored: true,
+    coldChainStatus: '2°C - 8°C Verified',
+    certificateIssued: false,
+    createdAt: new Date(Date.now() - 12 * 3600 * 1000).toISOString()
+  },
+  {
+    id: 'vb-demo-02',
+    scheduleId: 'vac-02',
+    farmerId: 'usr-farmer-2',
+    farmerName: 'Suresh Deshmukh',
+    farmerPhone: '+91 98900 12345',
+    village: 'Baramati, Pune',
+    doorstepAddress: 'Deshmukh Dairy Farm, Baramati',
+    animalId: 'ANM-2026-773102',
+    animalName: 'Kali',
+    animalTag: 'ET-441209',
+    species: 'Buffalo (Murrah)',
+    vaccineName: 'Haemorrhagic Septicaemia (HS-Alum)',
+    laboratoryId: 'lab-pune-central',
+    labName: 'State Veterinary Biological Diagnostic Research Institute',
+    centerName: 'State Veterinary Biological Diagnostic Research Institute',
+    batchNumber: 'VAC-BIO-HS-2026',
+    bookedDate: '2026-09-29',
+    slot: 'Afternoon (01:00 PM - 04:00 PM)',
+    status: 'Confirmed',
+    serviceType: 'Doorstep Cold-Chain Lab Unit',
+    coldChainMonitored: true,
+    coldChainStatus: '2°C - 8°C Verified',
+    certificateIssued: false,
+    createdAt: new Date(Date.now() - 20 * 3600 * 1000).toISOString()
+  },
+  {
+    id: 'vb-demo-03',
+    scheduleId: 'vac-03',
+    farmerId: 'usr-farmer-3',
+    farmerName: 'Balasaheb Shinde',
+    farmerPhone: '+91 97654 32109',
+    village: 'Haveli, Pune',
+    doorstepAddress: 'Shinde Farm, Haveli',
+    animalId: 'ANM-2026-552190',
+    animalTag: 'ET-102938',
+    animalName: 'Chotu',
+    species: 'Goat (Boer)',
+    vaccineName: 'Black Quarter (BQ Vaccine)',
+    laboratoryId: 'lab-pune-central',
+    labName: 'State Veterinary Biological Diagnostic Research Institute',
+    centerName: 'State Veterinary Biological Diagnostic Research Institute',
+    batchNumber: 'VAC-BIO-BQ-9042',
+    bookedDate: '2026-09-25',
+    slot: 'Morning (09:00 AM - 12:00 PM)',
+    status: 'Administered',
+    serviceType: 'Doorstep Cold-Chain Lab Unit',
+    coldChainMonitored: true,
+    coldChainStatus: '2°C - 8°C Verified',
+    certificateIssued: true,
+    certificateId: 'CERT-VAC-2026-771920',
+    administeredBy: 'Dr. Neha Kulkarni',
+    certifyingLab: 'State Veterinary Biological Diagnostic Research Institute',
+    createdAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString()
+  }
+];
+
 export const LabApiService = {
   getAuthHeader() {
     const token = localStorage.getItem('pashu_lab_token') || 'demo-lab-staff-token';
@@ -107,7 +188,7 @@ export const LabApiService = {
       const res = await fetch(`${BASE_URL}/labs/staff/queue`, { credentials: 'omit', headers: this.getAuthHeader() });
       if (res.ok) {
         const data = await res.json();
-        if (data && data.length > 0) return data;
+        if (Array.isArray(data)) return data;
       }
     } catch (_) {}
     return initialDemoBookings;
@@ -121,7 +202,7 @@ export const LabApiService = {
       });
       return res.ok;
     } catch (_) {
-      return true;
+      return false;
     }
   },
 
@@ -134,7 +215,37 @@ export const LabApiService = {
       });
       return res.ok;
     } catch (_) {
+      return false;
+    }
+  },
+
+  async fetchVaccinations(): Promise<VaccinationBooking[]> {
+    try {
+      const res = await fetch(`${BASE_URL}/vaccinations/bookings`, { credentials: 'omit', headers: this.getAuthHeader() });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) return data;
+      }
+    } catch (_) {}
+    return initialDemoVaccinations;
+  },
+
+  async administerVaccination(bookingId: string, technicianName: string, batchNumber: string, remarks?: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${BASE_URL}/vaccinations/bookings/${bookingId}/status`, {
+        method: 'PATCH',
+        headers: this.getAuthHeader(),
+        body: JSON.stringify({
+          status: 'Administered',
+          technicianName,
+          batchNumber,
+          remarks
+        })
+      });
+      return res.ok;
+    } catch (_) {
       return true;
     }
   }
 };
+

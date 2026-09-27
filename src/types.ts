@@ -53,9 +53,41 @@ export interface TestReport {
   finalizedAt: string;
 }
 
+export interface VaccinationBooking {
+  id: string;
+  scheduleId?: string;
+  farmerId: string;
+  farmerName: string;
+  farmerPhone: string;
+  village: string;
+  doorstepAddress?: string;
+  animalId: string;
+  animalName: string;
+  animalTag: string;
+  species: string;
+  vaccineName: string;
+  laboratoryId: string;
+  labName: string;
+  centerName: string;
+  batchNumber: string;
+  bookedDate: string;
+  slot: string;
+  status: 'Confirmed' | 'Dispatched' | 'Administered' | 'Cancelled';
+  serviceType?: string;
+  coldChainMonitored?: boolean;
+  coldChainStatus?: string;
+  certificateIssued?: boolean;
+  certificateId?: string;
+  administeredBy?: string;
+  certifyingLab?: string;
+  createdAt: string;
+}
+
 export type LabNavTab = 
   | 'dashboard' 
   | 'queue' 
+  | 'vaccinations'
   | 'completed' 
   | 'history' 
   | 'profile';
+
