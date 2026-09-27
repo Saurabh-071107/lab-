@@ -50,7 +50,13 @@ export const App: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const pendingCount = bookings.filter(b => b.status === 'TEST_BOOKED' || b.status === 'TEST_IN_PROGRESS').length;
+  const pendingCount = bookings.filter(b => 
+    b.status === 'TEST_BOOKED' || 
+    b.status === 'ACCEPTED' || 
+    b.status === 'SAMPLE_COLLECTED' || 
+    b.status === 'IN_TESTING' || 
+    b.status === 'TEST_IN_PROGRESS'
+  ).length;
   const pendingVaccinationsCount = vaccinations.filter(v => v.status !== 'Administered').length;
 
   const handleStartTest = async (bookingId: string) => {
@@ -162,6 +168,11 @@ export const App: React.FC = () => {
               onOpenTestDetails={setSelectedDetailsBooking}
               onOpenUploadReport={setSelectedUploadBooking}
               onStartTest={handleStartTest}
+              onRefresh={() => {
+                LabApiService.fetchQueue().then(data => {
+                  if (Array.isArray(data)) setBookings(data);
+                });
+              }}
             />
           )}
 

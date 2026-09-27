@@ -194,6 +194,36 @@ export const LabApiService = {
     return initialDemoBookings;
   },
 
+  async acceptTest(bookingId: string, collectorName: string, collectorPhone?: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await fetch(`${BASE_URL}/labs/tests/${bookingId}/accept`, {
+        method: 'PATCH',
+        headers: this.getAuthHeader(),
+        body: JSON.stringify({ collectorName, collectorPhone })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) return { success: true };
+      return { success: false, error: data.error || 'Failed to accept test.' };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  },
+
+  async verifyCollectionOtp(bookingId: string, otp: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await fetch(`${BASE_URL}/labs/tests/${bookingId}/verify-collection`, {
+        method: 'POST',
+        headers: this.getAuthHeader(),
+        body: JSON.stringify({ otp })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) return { success: true };
+      return { success: false, error: data.error || 'Invalid OTP' };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  },
+
   async startTest(bookingId: string): Promise<boolean> {
     try {
       const res = await fetch(`${BASE_URL}/labs/tests/${bookingId}/start`, {

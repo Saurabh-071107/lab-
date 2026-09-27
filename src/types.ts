@@ -23,10 +23,16 @@ export interface TestBooking {
   labName: string;
   testType: string;
   date: string;
+  slotDate?: string;
   slotId: string;
   slotTime: string;
   notes?: string;
-  status: 'TEST_BOOKED' | 'TEST_IN_PROGRESS' | 'REPORT_AVAILABLE' | 'COMPLETED' | 'CANCELLED';
+  collectionOtp?: string;
+  collectorName?: string;
+  collectorPhone?: string;
+  status: 'TEST_BOOKED' | 'ACCEPTED' | 'SAMPLE_COLLECTED' | 'IN_TESTING' | 'TEST_IN_PROGRESS' | 'REPORT_AVAILABLE' | 'COMPLETED' | 'CANCELLED';
+  acceptedAt?: string;
+  collectedAt?: string;
   startedAt?: string;
   completedAt?: string;
   staffName?: string;
