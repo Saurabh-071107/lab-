@@ -52,8 +52,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Pashu Seva Diagnostic Lab Box */}
         <div className="gov-app-branding">
-          <div className="gov-app-icon-squircle">
-            <Microscope size={20} color="#ffffff" strokeWidth={2.4} />
+          <div className="gov-app-icon-squircle" style={{ overflow: 'hidden', padding: 0 }}>
+            <img src="/assets/app_logo.png" alt="Pashu Seva Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div className="gov-app-titles">
             <div className="gov-app-name">PASHU SEVA</div>
