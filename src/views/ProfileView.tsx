@@ -20,10 +20,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ user, onOpenLogin }) =
     <div 
       style={{ 
         position: 'relative',
-        minHeight: 'calc(100vh - 120px)',
+        minHeight: 'calc(100vh - 145px)',
         display: 'flex', 
-        flexDirection: 'column',
-        justifyContent: 'space-between'
+        flexDirection: 'column'
       }}
     >
       <div>
@@ -35,13 +34,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ user, onOpenLogin }) =
             background: 'linear-gradient(90deg, #ecfdf5 0%, #f0fdf9 38%, rgba(240, 253, 249, 0.25) 70%, #ecfdf5 100%)',
             borderRadius: 18,
             border: '1px solid #d1fae5',
-            padding: '24px 32px',
+            padding: '26px 32px',
             marginBottom: 24,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             boxShadow: '0 2px 10px rgba(13, 148, 136, 0.05)',
-            minHeight: 120
+            minHeight: 130
           }}
         >
           {/* Diagnostic & Doctor Silhouette in Background */}
@@ -51,7 +50,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ user, onOpenLogin }) =
               right: 20,
               top: 0,
               bottom: 0,
-              width: 460,
+              width: 480,
               backgroundImage: `url('/assets/profile-banner.png')`,
               backgroundSize: 'contain',
               backgroundPosition: 'right center',
@@ -110,8 +109,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ user, onOpenLogin }) =
           {/* Avatar circle */}
           <div 
             style={{
-              width: 80,
-              height: 80,
+              width: 78,
+              height: 78,
               borderRadius: '50%',
               backgroundColor: '#dcfce7',
               color: '#059669',
@@ -121,7 +120,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ user, onOpenLogin }) =
               fontSize: 34,
               fontWeight: 800,
               flexShrink: 0,
-              boxShadow: '0 2px 8px rgba(5, 150, 105, 0.15)'
+              boxShadow: '0 2px 8px rgba(5, 150, 105, 0.12)'
             }}
           >
             {user.name.charAt(0)}
@@ -131,7 +130,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ user, onOpenLogin }) =
           <div style={{ flex: 1, minWidth: 280 }}>
             {/* Name and Verified Badge */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#0f172a' }}>
+              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' }}>
                 {user.name}
               </h2>
               <span 
@@ -153,39 +152,38 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ user, onOpenLogin }) =
             </div>
 
             {/* Designation / Role */}
-            <div style={{ fontSize: 15, color: '#059669', fontWeight: 600, marginTop: 4, marginBottom: 22 }}>
+            <div style={{ fontSize: 15, color: '#059669', fontWeight: 600, marginTop: 4, marginBottom: 24 }}>
               {user.designation || 'Senior Veterinary Pathologist'}
             </div>
 
-            {/* 2-Column Info Grid */}
-            <div 
-              style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-                gap: '16px 36px', 
-                marginBottom: 26,
-                fontSize: 14 
-              }}
-            >
+            {/* Structured 2x2 Credential Grid */}
+            <div className="gov-profile-grid">
+              {/* Row 1, Col 1: Facility */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#334155' }}>
                 <Building2 size={18} color="#059669" style={{ flexShrink: 0 }} />
                 <span style={{ fontWeight: 500 }}>{user.laboratoryName}</span>
               </div>
+
+              {/* Row 1, Col 2: License */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#334155' }}>
                 <FileText size={18} color="#059669" style={{ flexShrink: 0 }} />
                 <span style={{ fontWeight: 500 }}>License #{user.licenseNumber}</span>
               </div>
+
+              {/* Row 2, Col 1: Phone */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#334155' }}>
                 <Phone size={18} color="#059669" style={{ flexShrink: 0 }} />
                 <span style={{ fontWeight: 500 }}>{user.phone}</span>
               </div>
+
+              {/* Row 2, Col 2: Safety Clearance */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#334155' }}>
                 <ShieldCheck size={18} color="#059669" style={{ flexShrink: 0 }} />
                 <span style={{ fontWeight: 500 }}>Authorized Bio-Safety Level 2 Assays</span>
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Relogin Action Button */}
             <div>
               <button 
                 type="button"
@@ -194,7 +192,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ user, onOpenLogin }) =
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 8,
-                  padding: '10px 20px',
+                  padding: '10px 22px',
                   borderRadius: 10,
                   background: '#e0f2fe',
                   color: '#0284c7',
@@ -219,28 +217,55 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ user, onOpenLogin }) =
         </div>
       </div>
 
-      {/* Bottom Pasture Livestock Illustration */}
+      {/* Ambient Bottom Pasture Landscape with seamless fade & natural scale */}
       <div 
         style={{
           marginTop: 'auto',
-          paddingTop: 32,
-          display: 'flex',
-          justifyContent: 'flex-end',
+          paddingTop: 36,
+          width: '100%',
+          height: 175,
+          position: 'relative',
           pointerEvents: 'none',
-          userSelect: 'none'
+          userSelect: 'none',
+          overflow: 'hidden'
         }}
       >
-        <img 
-          src="/assets/profile-bottom-pasture.png" 
-          alt="Veterinary Pasture Landscape" 
+        {/* Horizontal gradient mask to eliminate any left edge cut */}
+        <div 
           style={{
-            maxWidth: '100%',
-            width: 720,
-            height: 'auto',
-            objectFit: 'contain',
-            opacity: 0.95
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: '100%',
+            maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,1) 22%, rgba(0,0,0,1) 100%)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,1) 22%, rgba(0,0,0,1) 100%)'
           }}
-        />
+        >
+          {/* Vertical gradient mask to eliminate top edge */}
+          <div 
+            style={{
+              width: '100%',
+              height: '100%',
+              maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 55%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 55%, transparent 100%)'
+            }}
+          >
+            {/* Blended background illustration */}
+            <div 
+              style={{
+                width: '100%',
+                height: '100%',
+                backgroundImage: `url('/assets/profile-bottom-pasture.png')`,
+                backgroundSize: 'auto 100%',
+                backgroundPosition: 'right bottom',
+                backgroundRepeat: 'no-repeat',
+                opacity: 0.9,
+                mixBlendMode: 'multiply'
+              }}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1063,3 +1063,23 @@ tr:hover td {
     font-size: 20px;
   }
 }
+
+/* =========================================================================
+   STAFF PROFILE VIEW
+   ========================================================================= */
+
+.gov-profile-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.3fr) minmax(280px, 1fr);
+  gap: 18px 48px;
+  max-width: 860px;
+  margin-bottom: 28px;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .gov-profile-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
