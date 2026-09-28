@@ -1,84 +1,101 @@
 import React from 'react';
-import { Bell, ShieldCheck, User } from 'lucide-react';
+import { Bell, ShieldCheck, ChevronDown, Menu, X, Microscope } from 'lucide-react';
 import { LabStaffUser } from '../types';
 
 interface NavbarProps {
   user: LabStaffUser;
   onOpenLogin: () => void;
+  isMobileMenuOpen?: boolean;
+  onToggleMobileMenu?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ user, onOpenLogin }) => {
+export const Navbar: React.FC<NavbarProps> = ({ 
+  user, 
+  onOpenLogin,
+  isMobileMenuOpen,
+  onToggleMobileMenu
+}) => {
   return (
-    <header className="top-navbar">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
-          Livestock Diagnostics & Pathological Investigation System
-        </h2>
-        <span className="badge" style={{ backgroundColor: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0' }}>
-          <ShieldCheck size={14} /> Official Government Station
-        </span>
+    <header className="gov-top-navbar">
+      {/* Left Branding Group */}
+      <div className="gov-brand-cluster">
+        {/* Mobile Menu Hamburger */}
+        {onToggleMobileMenu && (
+          <button 
+            className="gov-mobile-menu-btn"
+            onClick={onToggleMobileMenu}
+            aria-label="Toggle navigation menu"
+          >
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        )}
+
+        {/* Maharashtra Government State Seal */}
+        <div className="gov-seal-container">
+          <img 
+            src="/assets/state_seal.png" 
+            alt="Government of Maharashtra State Seal" 
+            className="gov-state-seal-img"
+            onError={(e) => {
+              // Fallback if image fails
+              (e.currentTarget as HTMLElement).style.display = 'none';
+            }}
+          />
+          <div className="gov-state-titles">
+            <div className="gov-state-en">Government of Maharashtra</div>
+            <div className="gov-state-mr">महाराष्ट्र शासन</div>
+          </div>
+        </div>
+
+        {/* Vertical Separator */}
+        <div className="gov-nav-divider" />
+
+        {/* Pashu Seva Diagnostic Lab Box */}
+        <div className="gov-app-branding">
+          <div className="gov-app-icon-squircle">
+            <Microscope size={20} color="#ffffff" strokeWidth={2.4} />
+          </div>
+          <div className="gov-app-titles">
+            <div className="gov-app-name">PASHU SEVA</div>
+            <div className="gov-app-sub">DIAGNOSTIC LAB</div>
+          </div>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+      {/* Right User & Status Cluster */}
+      <div className="gov-user-cluster">
+        {/* Official Station Verified Badge */}
+        <div className="gov-verified-pill">
+          <ShieldCheck size={14} className="gov-shield-icon" />
+          <span>Official Government Station</span>
+        </div>
+
         {/* Notification Bell */}
         <button
           id="lab-btn-notifications"
-          style={{
-            position: 'relative',
-            width: 38,
-            height: 38,
-            borderRadius: 8,
-            border: '1px solid #e2e8f0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#64748b',
-          }}
+          className="gov-icon-button"
+          aria-label="Notifications"
+          title="System notifications"
         >
           <Bell size={18} />
-          <span style={{
-            position: 'absolute',
-            top: 7,
-            right: 7,
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            backgroundColor: '#ef4444',
-          }} />
+          <span className="gov-bell-dot" />
         </button>
 
-        {/* Staff Profile Pill */}
+        {/* User Profile Pill */}
         <button
           id="lab-btn-profile-pill"
           onClick={onOpenLogin}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '6px 12px',
-            borderRadius: 8,
-            border: '1px solid #e2e8f0',
-            backgroundColor: '#ffffff',
-          }}
+          className="gov-profile-pill"
+          title="Click to view staff credentials or switch profile"
         >
-          <div style={{
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            backgroundColor: '#d1fae5',
-            color: '#059669',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 700,
-            fontSize: 13
-          }}>
-            {user.name.charAt(0)}
+          <div className="gov-avatar-circle">
+            {user.name ? user.name.replace('Dr. ', '').charAt(0) : 'D'}
           </div>
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{user.name}</div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>{user.designation}</div>
+          <div className="gov-profile-text">
+            <div className="gov-profile-name">{user.name}</div>
+            <div className="gov-profile-role">{user.designation}</div>
           </div>
+          <ChevronDown size={15} className="gov-chevron-icon" />
         </button>
       </div>
     </header>

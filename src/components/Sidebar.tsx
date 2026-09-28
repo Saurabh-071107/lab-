@@ -5,9 +5,9 @@ import {
   CheckCircle2, 
   History, 
   UserCircle2, 
-  LogOut,
-  Microscope,
-  Syringe
+  Syringe,
+  MapPin,
+  ChevronRight
 } from 'lucide-react';
 import { LabNavTab } from '../types';
 
@@ -16,108 +16,94 @@ interface SidebarProps {
   onTabChange: (tab: LabNavTab) => void;
   pendingCount: number;
   pendingVaccinationsCount?: number;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
   activeTab, 
   onTabChange, 
   pendingCount,
-  pendingVaccinationsCount = 0
+  pendingVaccinationsCount = 0,
+  isMobileOpen = false,
+  onCloseMobile
 }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'queue', label: 'Test Queue', icon: FlaskConical, badge: pendingCount },
-    { id: 'vaccinations', label: 'Vaccinations', icon: Syringe, badge: pendingVaccinationsCount },
+    { id: 'queue', label: 'Test Queue', icon: FlaskConical, badge: pendingCount > 0 ? pendingCount : undefined },
+    { id: 'vaccinations', label: 'Vaccinations', icon: Syringe, badge: pendingVaccinationsCount > 0 ? pendingVaccinationsCount : undefined, badgeColor: '#059669' },
     { id: 'completed', label: 'Completed Tests', icon: CheckCircle2 },
     { id: 'history', label: 'Archive & History', icon: History },
     { id: 'profile', label: 'Staff Profile', icon: UserCircle2 },
   ];
 
+  const handleSelectTab = (tab: LabNavTab) => {
+    onTabChange(tab);
+    if (onCloseMobile) onCloseMobile();
+  };
 
   return (
-    <aside className="sidebar">
-      {/* Branding */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32, paddingLeft: 8 }}>
-        <div style={{
-          width: 40,
-          height: 40,
-          borderRadius: 10,
-          background: 'linear-gradient(135deg, #059669 0%, #0284c7 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#fff',
-          boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)'
-        }}>
-          <Microscope size={22} />
-        </div>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 16, color: '#0f172a', letterSpacing: '-0.02em' }}>
-            PASHU SEVA
-          </div>
-          <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Diagnostic Lab
-          </div>
-        </div>
-      </div>
+    <>
+      {/* Mobile Backdrop */}
+      {isMobileOpen && (
+        <div 
+          className="gov-sidebar-backdrop" 
+          onClick={onCloseMobile} 
+          aria-hidden="true" 
+        />
+      )}
 
-      {/* Navigation */}
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              id={`lab-nav-${item.id}`}
-              onClick={() => onTabChange(item.id as LabNavTab)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '11px 14px',
-                borderRadius: 8,
-                fontSize: 14,
-                fontWeight: isActive ? 600 : 500,
-                color: isActive ? '#059669' : '#475569',
-                backgroundColor: isActive ? '#ecfdf5' : 'transparent',
-                textAlign: 'left',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Icon size={18} color={isActive ? '#059669' : '#64748b'} />
-                <span>{item.label}</span>
-              </div>
-              {item.badge !== undefined && item.badge > 0 && (
-                <span style={{
-                  background: '#059669',
-                  color: '#fff',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  padding: '2px 7px',
-                  borderRadius: 9999,
-                }}>
-                  {item.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
+      <aside className={`gov-sidebar ${isMobileOpen ? 'open' : ''}`}>
+        {/* Navigation Section */}
+        <nav className="gov-nav-list">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                id={`lab-nav-${item.id}`}
+                onClick={() => handleSelectTab(item.id as LabNavTab)}
+                className={`gov-nav-item ${isActive ? 'active' : ''}`}
+              >
+                <div className="gov-nav-item-content">
+                  <Icon size={19} className="gov-nav-icon" />
+                  <span className="gov-nav-label">{item.label}</span>
+                </div>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span 
+                    className="gov-nav-badge"
+                    style={{ backgroundColor: item.badgeColor || '#0284c7' }}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
 
-      {/* Footer Info */}
-      <div style={{
-        padding: '12px 14px',
-        backgroundColor: '#f8fafc',
-        borderRadius: 8,
-        border: '1px solid #e2e8f0',
-        marginBottom: 12
-      }}>
-        <div style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>Active Station</div>
-        <div style={{ fontSize: 12, color: '#0f172a', fontWeight: 600, marginTop: 2 }}>
-          Pune Regional Lab
+        {/* Bottom Silhouette & Station Card */}
+        <div className="gov-sidebar-footer-wrapper">
+          {/* Subtle Animal Graphic Background */}
+          <div 
+            className="gov-sidebar-silhouette-bg" 
+            style={{ backgroundImage: `url('/assets/sidebar-silhouette.png')` }}
+          />
+
+          {/* Floating Active Station Card */}
+          <div className="gov-station-card" title="Station ID: lab-pune-central">
+            <div className="gov-station-icon-wrap">
+              <MapPin size={16} />
+            </div>
+            <div className="gov-station-meta">
+              <span className="gov-station-sub">Active Station</span>
+              <span className="gov-station-name">Pune Regional Lab</span>
+            </div>
+            <ChevronRight size={16} className="gov-station-arrow" />
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };

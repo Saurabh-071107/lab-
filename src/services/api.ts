@@ -7,6 +7,47 @@ export const SOCKET_URL = BASE_URL.replace('/api', '');
 // Demo initial test records for robust offline/fallback operation
 export const initialDemoBookings: TestBooking[] = [
   {
+    id: 'TB-2026-181108',
+    bookingId: 'TB-2026-181108',
+    farmerId: 'usr-farmer-1',
+    farmerName: 'Ramesh Patil',
+    farmerPhone: '+91 98221 55667',
+    animalId: 'ANM-2026-3059',
+    animalTag: '25MC3059',
+    animalType: 'Cow (HF Cross)',
+    caseId: 'CASE-2026-000003',
+    laboratoryId: 'lab-pune-central',
+    labName: 'State Veterinary Biological Diagnostic Research Institute',
+    testType: 'Blood Test',
+    date: '2026-09-28',
+    slotId: '2026-09-28_1000',
+    slotTime: '10:00 AM - 11:00 AM',
+    notes: 'Official state laboratory routine bovine hematology assay.',
+    status: 'REPORT_AVAILABLE',
+    report: {
+      id: 'RPT-2026-181108',
+      reportId: 'RPT-2026-181108',
+      bookingId: 'TB-2026-181108',
+      animalId: 'ANM-2026-3059',
+      animalTag: '25MC3059',
+      testType: 'Blood Test',
+      testResult: 'Optimal Physiological Parameters',
+      resultSummary: 'Complete hematological indices within normal reference physiological limits.',
+      parameters: {
+        'Hemoglobin (Hb)': '11.4 g/dL (Ref: 9.0-14.0)',
+        'Packed Cell Volume (PCV)': '32% (Ref: 27-38%)',
+        'Total Leukocyte Count (TLC)': '8,200 /uL (Ref: 6,000-12,000)'
+      },
+      reportFileUrl: '/uploads/reports/sample_pathology_report.pdf',
+      observations: 'No pathogenic morphological abnormalities observed in peripheral blood film.',
+      isAbnormal: false,
+      finalizedBy: 'usr-lab-1',
+      staffName: 'Dr. Neha Kulkarni',
+      finalizedAt: new Date().toISOString()
+    },
+    createdAt: new Date().toISOString()
+  },
+  {
     id: 'TB-2026-101',
     bookingId: 'TB-2026-101',
     farmerId: 'usr-farmer-1',

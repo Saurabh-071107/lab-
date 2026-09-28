@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  FlaskConical, 
-  Clock, 
-  CheckCircle2, 
-  AlertTriangle, 
   ArrowRight,
-  TrendingUp,
-  FileText
+  ClipboardList,
+  ChevronRight,
+  Clock,
+  FlaskConical,
+  CheckCircle2,
+  AlertTriangle
 } from 'lucide-react';
 import { TestBooking } from '../types';
 
@@ -28,177 +28,246 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const inProgress = bookings.filter(b => b.status === 'TEST_IN_PROGRESS');
   const booked = bookings.filter(b => b.status === 'TEST_BOOKED');
   const finalized = bookings.filter(b => b.status === 'REPORT_AVAILABLE' || b.status === 'COMPLETED');
+  const criticalCount = bookings.filter(b => b.report?.isAbnormal).length;
 
   const stats = [
-    { title: 'In-Progress Diagnostics', value: inProgress.length, icon: Clock, color: '#f59e0b', bg: '#fef3c7' },
-    { title: 'Awaiting Sample / Processing', value: booked.length, icon: FlaskConical, color: '#0284c7', bg: '#e0f2fe' },
-    { title: 'Reports Finalized', value: finalized.length, icon: CheckCircle2, color: '#059669', bg: '#d1fae5' },
-    { title: 'Critical / Abnormal Flags', value: bookings.filter(b => b.report?.isAbnormal).length, icon: AlertTriangle, color: '#ef4444', bg: '#fee2e2' },
+    { 
+      title: 'IN-PROGRESS DIAGNOSTICS', 
+      value: inProgress.length, 
+      imgSrc: '/assets/icon-inprogress.png',
+      fallbackIcon: Clock,
+      color: '#f59e0b', 
+      bg: '#fef3c7',
+      accentColor: '#f59e0b'
+    },
+    { 
+      title: 'AWAITING SAMPLE / PROCESSING', 
+      value: booked.length, 
+      imgSrc: '/assets/icon-awaiting.png',
+      fallbackIcon: FlaskConical,
+      color: '#0284c7', 
+      bg: '#e0f2fe',
+      accentColor: '#0284c7'
+    },
+    { 
+      title: 'REPORTS FINALIZED', 
+      value: finalized.length, 
+      imgSrc: '/assets/icon-finalized.png',
+      fallbackIcon: CheckCircle2,
+      color: '#10b981', 
+      bg: '#dcfce7',
+      accentColor: '#10b981'
+    },
+    { 
+      title: 'CRITICAL / ABNORMAL FLAGS', 
+      value: criticalCount, 
+      imgSrc: '/assets/icon-critical.png',
+      fallbackIcon: AlertTriangle,
+      color: '#ef4444', 
+      bg: '#fee2e2',
+      accentColor: '#ef4444'
+    },
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-      {/* Welcome Banner */}
-      <div style={{
-        background: 'linear-gradient(135deg, #065f46 0%, #047857 50%, #0284c7 100%)',
-        color: '#ffffff',
-        borderRadius: 16,
-        padding: '28px 32px',
-        boxShadow: '0 10px 25px rgba(5, 150, 105, 0.2)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div>
-          <span style={{
-            fontSize: 12,
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            background: 'rgba(255, 255, 255, 0.2)',
-            padding: '4px 10px',
-            borderRadius: 9999
-          }}>
-            Pathology Laboratory Operations
-          </span>
-          <h1 style={{ fontSize: 24, fontWeight: 700, marginTop: 10 }}>
-            Veterinary Biological Research & Diagnostics Desk
-          </h1>
-          <p style={{ fontSize: 14, opacity: 0.9, marginTop: 4, maxWidth: 600 }}>
-            Review pending laboratory test bookings, initiate biochemical assays, and finalize official diagnostic pathology certificates for attending veterinarians.
-          </p>
-        </div>
-        <button
-          id="lab-dash-btn-queue"
-          onClick={onGoToQueue}
-          style={{
-            background: '#ffffff',
-            color: '#065f46',
-            fontWeight: 700,
-            padding: '12px 20px',
-            borderRadius: 10,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-          }}
-        >
-          Open Test Queue <ArrowRight size={18} />
-        </button>
+    <div className="gov-dashboard-wrapper">
+      {/* Page Title */}
+      <div className="gov-view-heading-block">
+        <h1 className="gov-view-title">
+          Livestock Diagnostics & Pathological Investigation System
+        </h1>
       </div>
 
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
+      {/* Hero Card Banner */}
+      <div className="gov-hero-card">
+        {/* Left Informational Content */}
+        <div className="gov-hero-left">
+          <div className="gov-hero-tag">
+            PATHOLOGY LABORATORY OPERATIONS
+          </div>
+          <h2 className="gov-hero-title">
+            Veterinary Biological Research &amp; Diagnostics Desk
+          </h2>
+          <p className="gov-hero-desc">
+            Review pending laboratory test bookings, initiate biochemical assays, and finalize official diagnostic pathology certificates for attending veterinarians.
+          </p>
+          <button
+            id="lab-dash-btn-queue"
+            onClick={onGoToQueue}
+            className="gov-hero-btn"
+          >
+            <span>Open Test Queue</span>
+            <ArrowRight size={17} />
+          </button>
+        </div>
+
+        {/* Right Livestock Artwork */}
+        <div className="gov-hero-right">
+          <img 
+            src="/assets/banner-livestock.png" 
+            alt="Livestock Diagnostics (Cow, Goat, Chicken)" 
+            className="gov-hero-image"
+          />
+        </div>
+      </div>
+
+      {/* 4 Stat KPI Cards */}
+      <div className="gov-kpi-grid">
         {stats.map((stat, idx) => {
-          const Icon = stat.icon;
+          const FallbackIcon = stat.fallbackIcon;
           return (
-            <div key={idx} className="card card-hover" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{
-                width: 48,
-                height: 48,
-                borderRadius: 12,
-                backgroundColor: stat.bg,
-                color: stat.color,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Icon size={24} />
+            <div 
+              key={idx} 
+              className="gov-kpi-card"
+              style={{ borderBottomColor: stat.accentColor }}
+            >
+              <div 
+                className="gov-kpi-icon-wrap"
+                style={{ backgroundColor: stat.bg, color: stat.color }}
+              >
+                {stat.imgSrc ? (
+                  <img 
+                    src={stat.imgSrc} 
+                    alt={stat.title} 
+                    className="gov-kpi-asset-img"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <FallbackIcon size={24} />
+                )}
               </div>
-              <div>
-                <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
-                  {stat.title}
-                </div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', marginTop: 2 }}>
-                  {stat.value}
-                </div>
+              <div className="gov-kpi-info">
+                <div className="gov-kpi-label">{stat.title}</div>
+                <div className="gov-kpi-val">{stat.value}</div>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Urgent & Active Laboratory Queue */}
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div>
-            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0f172a' }}>Active Diagnostic Worklist</h3>
-            <p style={{ fontSize: 13, color: '#64748b' }}>Specimens in triage or currently loaded into laboratory analyzers.</p>
+      {/* Active Diagnostic Worklist Card */}
+      <div className="gov-worklist-card">
+        {/* Worklist Card Header */}
+        <div className="gov-worklist-header">
+          <div className="gov-worklist-header-left">
+            <div className="gov-worklist-icon-box">
+              <ClipboardList size={20} className="gov-clipboard-icon" />
+            </div>
+            <div>
+              <h3 className="gov-worklist-title">Active Diagnostic Worklist</h3>
+              <p className="gov-worklist-subtitle">
+                Specimens in triage or currently loaded into laboratory analyzers.
+              </p>
+            </div>
           </div>
-          <button onClick={onGoToQueue} style={{ fontSize: 13, fontWeight: 600, color: '#059669', display: 'flex', alignItems: 'center', gap: 4 }}>
-            View All ({bookings.length}) <ArrowRight size={14} />
+          <button 
+            onClick={onGoToQueue} 
+            className="gov-worklist-view-all"
+            id="lab-worklist-view-all"
+          >
+            View All ({bookings.length}) <ArrowRight size={15} />
           </button>
         </div>
 
-        <div className="table-container">
-          <table>
+        {/* Worklist Table */}
+        <div className="gov-table-container">
+          <table className="gov-worklist-table">
             <thead>
               <tr>
-                <th>Booking ID</th>
-                <th>Animal Tag</th>
-                <th>Investigation Test</th>
-                <th>Slot Time</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>BOOKING ID</th>
+                <th>ANIMAL TAG</th>
+                <th>INVESTIGATION TEST</th>
+                <th>SLOT TIME</th>
+                <th>STATUS</th>
+                <th>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
-              {bookings.slice(0, 5).map((booking) => (
-                <tr key={booking.id}>
-                  <td>
-                    <span style={{ fontWeight: 600, color: '#0369a1' }}>{booking.bookingId}</span>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{booking.animalTag}</div>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>{booking.animalType}</div>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 500 }}>{booking.testType}</div>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>{booking.labName.split(' ')[0]} Lab</div>
-                  </td>
-                  <td>{booking.slotTime}</td>
-                  <td>
-                    {booking.status === 'TEST_IN_PROGRESS' && (
-                      <span className="badge badge-in-progress">In Progress</span>
-                    )}
-                    {booking.status === 'TEST_BOOKED' && (
-                      <span className="badge badge-booked">Booked</span>
-                    )}
-                    {booking.status === 'REPORT_AVAILABLE' && (
-                      <span className="badge badge-available">Report Ready</span>
-                    )}
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button
-                        onClick={() => onOpenTestDetails(booking)}
-                        className="btn-secondary"
-                        style={{ padding: '6px 12px', fontSize: 12 }}
-                      >
-                        Details
-                      </button>
-                      {booking.status === 'TEST_BOOKED' && (
-                        <button
-                          onClick={() => onStartTest(booking.id)}
-                          className="btn-primary"
-                          style={{ padding: '6px 12px', fontSize: 12 }}
-                        >
-                          Start Test
-                        </button>
-                      )}
-                      {booking.status === 'TEST_IN_PROGRESS' && (
-                        <button
-                          onClick={() => onOpenUploadReport(booking)}
-                          className="btn-primary"
-                          style={{ padding: '6px 12px', fontSize: 12, backgroundColor: '#0284c7' }}
-                        >
-                          Upload Report
-                        </button>
-                      )}
-                    </div>
+              {bookings.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: '#64748b' }}>
+                    No active specimens or test bookings currently in worklist.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                bookings.slice(0, 6).map((booking) => (
+                  <tr key={booking.id || booking.bookingId}>
+                    {/* Booking ID */}
+                    <td>
+                      <span className="gov-table-booking-id">
+                        {booking.bookingId || booking.id}
+                      </span>
+                    </td>
+
+                    {/* Animal Tag */}
+                    <td>
+                      <div className="gov-table-primary-text">{booking.animalTag || 'Unknown Tag'}</div>
+                      <div className="gov-table-secondary-text">{booking.animalType || 'Livestock'}</div>
+                    </td>
+
+                    {/* Investigation Test */}
+                    <td>
+                      <div className="gov-table-primary-text">{booking.testType || 'Clinical Assay'}</div>
+                      <div className="gov-table-secondary-text">
+                        {booking.labName ? (booking.labName.includes(' ') ? booking.labName.split(' ')[0] + ' Lab' : booking.labName) : 'State Lab'}
+                      </div>
+                    </td>
+
+                    {/* Slot Time */}
+                    <td>
+                      <span className="gov-table-time-text">
+                        {booking.slotTime || 'Scheduled Today'}
+                      </span>
+                    </td>
+
+                    {/* Status Badge */}
+                    <td>
+                      {booking.status === 'REPORT_AVAILABLE' || booking.status === 'COMPLETED' ? (
+                        <span className="gov-status-pill ready">Report Ready</span>
+                      ) : booking.status === 'TEST_IN_PROGRESS' || booking.status === 'IN_TESTING' ? (
+                        <span className="gov-status-pill in-progress">In Progress</span>
+                      ) : (
+                        <span className="gov-status-pill booked">Booked</span>
+                      )}
+                    </td>
+
+                    {/* Actions */}
+                    <td>
+                      <div className="gov-table-actions">
+                        <button
+                          onClick={() => onOpenTestDetails(booking)}
+                          className="gov-btn-details-pill"
+                          title="View clinical specimen & animal details"
+                        >
+                          Details <ChevronRight size={14} />
+                        </button>
+                        
+                        {/* Quick Action buttons according to workflow */}
+                        {booking.status === 'TEST_BOOKED' && (
+                          <button
+                            onClick={() => onStartTest(booking.id || booking.bookingId)}
+                            className="gov-btn-action-start"
+                            title="Start diagnostic assay"
+                          >
+                            Start Test
+                          </button>
+                        )}
+                        {(booking.status === 'TEST_IN_PROGRESS' || booking.status === 'IN_TESTING') && (
+                          <button
+                            onClick={() => onOpenUploadReport(booking)}
+                            className="gov-btn-action-upload"
+                            title="Upload certified pathology report"
+                          >
+                            Upload Report
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

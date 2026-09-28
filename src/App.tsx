@@ -138,22 +138,30 @@ export const App: React.FC = () => {
     });
   };
 
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
   return (
-    <div className="app-container">
-      <Sidebar 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab} 
-        pendingCount={pendingCount} 
-        pendingVaccinationsCount={pendingVaccinationsCount}
+    <div className="gov-layout-root">
+      {/* Full-width Official Top Header */}
+      <Navbar 
+        user={currentUser} 
+        onOpenLogin={() => setIsLoginOpen(true)} 
+        isMobileMenuOpen={isMobileNavOpen}
+        onToggleMobileMenu={() => setIsMobileNavOpen(!isMobileNavOpen)}
       />
 
-      <div className="main-content">
-        <Navbar 
-          user={currentUser} 
-          onOpenLogin={() => setIsLoginOpen(true)} 
+      {/* Main Container below Header */}
+      <div className="gov-layout-body">
+        <Sidebar 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab} 
+          pendingCount={pendingCount} 
+          pendingVaccinationsCount={pendingVaccinationsCount}
+          isMobileOpen={isMobileNavOpen}
+          onCloseMobile={() => setIsMobileNavOpen(false)}
         />
 
-        <main className="page-body">
+        <main className="gov-main-viewport">
           {activeTab === 'dashboard' && (
             <DashboardView
               bookings={bookings}
