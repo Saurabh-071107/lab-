@@ -12,7 +12,11 @@ import {
   UserCheck,
   KeyRound,
   X,
-  AlertCircle
+  ChevronRight,
+  Printer,
+  FileCheck,
+  Tag,
+  User
 } from 'lucide-react';
 import { VaccinationBooking, LabStaffUser } from '../types';
 import { LabApiService } from '../services/api';
@@ -35,6 +39,7 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
   // Modals state
   const [assignModalBooking, setAssignModalBooking] = useState<VaccinationBooking | null>(null);
   const [verifyOtpModalBooking, setVerifyOtpModalBooking] = useState<VaccinationBooking | null>(null);
+  const [selectedCertBooking, setSelectedCertBooking] = useState<VaccinationBooking | null>(null);
 
   // Assign Modal inputs
   const [vaccinatorName, setVaccinatorName] = useState('Dr. Ramesh Shinde (Senior Paravet)');
@@ -46,12 +51,15 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
 
   // OTP Modal inputs
   const [otp, setOtp] = useState('');
-  const [remarks, setRemarks] = useState('Prophylactic dose administered at doorstep via cold chain protocol.');
+  const [remarks, setRemarks] = useState('Prophylactic dose administered at doorstep via subcutaneous route.');
   const [isVerifying, setIsVerifying] = useState(false);
   const [otpError, setOtpError] = useState<string | null>(null);
 
   const isCompletedStatus = (status: string) => 
     status === 'Administered' || status === 'COMPLETED' || status === 'ADMINISTERED';
+
+  const isAcceptedStatus = (status: string) =>
+    status === 'ACCEPTED' || status === 'OUT_FOR_VACCINATION' || status === 'Out for Vaccination';
 
   const filtered = vaccinations.filter(v => {
     const isDone = isCompletedStatus(v.status);
@@ -143,139 +151,339 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
     }
   };
 
+  // Determine icon and color scheme based on vaccine or index
+  const getVaccineTheme = (vaccineName: string, index: number) => {
+    const lower = vaccineName.toLowerCase();
+    if (lower.includes('foot') || lower.includes('fmd')) {
+      return {
+        bg: '#fff7ed',
+        color: '#ea580c',
+        badgeBg: '#ffedd5',
+        badgeColor: '#c2410c'
+      };
+    }
+    if (lower.includes('haemorrhagic') || lower.includes('hs')) {
+      return {
+        bg: '#f3e8ff',
+        color: '#7c3aed',
+        badgeBg: '#ffedd5',
+        badgeColor: '#c2410c'
+      };
+    }
+    if (lower.includes('black') || lower.includes('bq')) {
+      return {
+        bg: '#ecfdf5',
+        color: '#059669',
+        badgeBg: '#d1fae5',
+        badgeColor: '#065f46'
+      };
+    }
+    // Alternate based on index
+    const themes = [
+      { bg: '#fff7ed', color: '#ea580c', badgeBg: '#ffedd5', badgeColor: '#c2410c' },
+      { bg: '#f3e8ff', color: '#7c3aed', badgeBg: '#ffedd5', badgeColor: '#c2410c' },
+      { bg: '#ecfdf5', color: '#059669', badgeBg: '#d1fae5', badgeColor: '#065f46' }
+    ];
+    return themes[index % themes.length];
+  };
+
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-      {/* Top Banner */}
-      <div style={{
-        background: 'linear-gradient(135deg, #065f46 0%, #0d9488 100%)',
-        color: '#fff',
-        padding: '24px 28px',
-        borderRadius: 16,
-        marginBottom: 24,
-        boxShadow: '0 8px 24px rgba(13, 148, 136, 0.25)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: 16
-      }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <span style={{
-              background: 'rgba(255, 255, 255, 0.2)',
-              padding: '4px 10px',
-              borderRadius: 20,
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase'
-            }}>
-              Cold-Chain Mobile Unit
-            </span>
-            <span style={{ fontSize: 13, opacity: 0.9 }}>
-              ICAR & NADCP Accredited Biological Dispatch
-            </span>
-          </div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em' }}>
-            Laboratory Livestock Vaccination Portal
-          </h1>
-          <p style={{ margin: '6px 0 0', fontSize: 14, opacity: 0.9, maxWidth: 640 }}>
-            Manage doorstep livestock vaccinations booked by farmers. Assign field paravets, monitor cold chain storage, verify administration via farmer OTP, and certify doses.
-          </p>
-        </div>
-
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.15)',
-          padding: '12px 18px',
-          borderRadius: 12,
+    <div style={{ maxWidth: 1240, margin: '0 auto', paddingBottom: 40 }}>
+      {/* 1. Hero Banner with Panorama & Cold-Chain Badge */}
+      <div 
+        style={{
+          position: 'relative',
+          overflow: 'hidden',
+          background: 'linear-gradient(90deg, #ecfdf5 0%, #f0fdf9 38%, rgba(240, 253, 249, 0.25) 70%, #ecfdf5 100%)',
+          borderRadius: 18,
+          border: '1px solid #d1fae5',
+          padding: '26px 32px',
+          marginBottom: 24,
           display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
-          gap: 12,
-          border: '1px solid rgba(255, 255, 255, 0.25)'
-        }}>
-          <Thermometer size={28} />
+          boxShadow: '0 2px 10px rgba(13, 148, 136, 0.05)',
+          minHeight: 140
+        }}
+      >
+        {/* Livestock Pasture Graphic in background */}
+        <div 
+          style={{
+            position: 'absolute',
+            right: 210,
+            top: 0,
+            bottom: 0,
+            width: 480,
+            backgroundImage: `url('/assets/vaccination-banner.png')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'left center',
+            backgroundRepeat: 'no-repeat',
+            opacity: 0.95,
+            pointerEvents: 'none',
+            maskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)'
+          }}
+        />
+
+        {/* Left Branding and Info */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, zIndex: 2, maxWidth: 620 }}>
+          <div 
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: '50%',
+              background: '#e6f7f4',
+              border: '2px solid #0d9488',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
+          >
+            <Syringe size={26} color="#0d9488" strokeWidth={2.4} />
+          </div>
+
           <div>
-            <div style={{ fontSize: 11, textTransform: 'uppercase', opacity: 0.85, fontWeight: 700 }}>
-              Cold-Chain Status
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
+              Laboratory Vaccination Portal
+            </h1>
+            <p style={{ margin: '6px 0 0', fontSize: 13.5, color: '#475569', lineHeight: 1.5 }}>
+              Manage doorstep livestock vaccinations booked by farmers. Assign field paravets, monitor cold chain storage, verify administration via farmer OTP, and certify doses.
+            </p>
+          </div>
+        </div>
+
+        {/* Right Cold-Chain Status Card */}
+        <div 
+          style={{
+            background: '#047857',
+            color: '#ffffff',
+            padding: '14px 22px',
+            borderRadius: 14,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+            boxShadow: '0 6px 18px rgba(4, 120, 87, 0.28)',
+            zIndex: 2,
+            flexShrink: 0,
+            border: '1px solid rgba(255, 255, 255, 0.15)'
+          }}
+        >
+          <Thermometer size={28} color="#ffffff" strokeWidth={2.4} />
+          <div>
+            <div style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#a7f3d0', fontWeight: 700 }}>
+              COLD-CHAIN STATUS
             </div>
-            <div style={{ fontSize: 17, fontWeight: 800 }}>
-              2°C – 8°C Verified
+            <div style={{ fontSize: 17, fontWeight: 800, color: '#ffffff', marginTop: 1 }}>
+              2°C - 8°C Verified
+            </div>
+          </div>
+          <div 
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: '50%',
+              background: '#10b981',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginLeft: 4
+            }}
+          >
+            <CheckCircle2 size={16} color="#ffffff" strokeWidth={3} />
+          </div>
+        </div>
+      </div>
+
+      {/* 2. KPI Metric Cards */}
+      <div 
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+          gap: 18, 
+          marginBottom: 24 
+        }}
+      >
+        {/* Total Bookings */}
+        <div 
+          style={{ 
+            background: '#ffffff', 
+            padding: '20px 24px', 
+            borderRadius: 16, 
+            border: '1px solid #e2e8f0', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 16,
+            boxShadow: '0 1px 4px rgba(0, 0, 0, 0.02)'
+          }}
+        >
+          <div 
+            style={{ 
+              width: 50, 
+              height: 50, 
+              borderRadius: 14, 
+              background: '#eff6ff', 
+              color: '#2563eb', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
+          >
+            <Calendar size={25} strokeWidth={2.2} />
+          </div>
+          <div>
+            <div style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>Total Bookings</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', lineHeight: 1.2, marginTop: 2 }}>
+              {vaccinations.length}
+            </div>
+          </div>
+        </div>
+
+        {/* Due / Dispatches Pending */}
+        <div 
+          style={{ 
+            background: '#ffffff', 
+            padding: '20px 24px', 
+            borderRadius: 16, 
+            border: '1px solid #e2e8f0', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 16,
+            boxShadow: '0 1px 4px rgba(0, 0, 0, 0.02)'
+          }}
+        >
+          <div 
+            style={{ 
+              width: 50, 
+              height: 50, 
+              borderRadius: 14, 
+              background: '#fff7ed', 
+              color: '#ea580c', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
+          >
+            <Clock size={25} strokeWidth={2.2} />
+          </div>
+          <div>
+            <div style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>Due / Dispatches Pending</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', lineHeight: 1.2, marginTop: 2 }}>
+              {dueCount}
+            </div>
+          </div>
+        </div>
+
+        {/* Administered & Certified */}
+        <div 
+          style={{ 
+            background: '#ffffff', 
+            padding: '20px 24px', 
+            borderRadius: 16, 
+            border: '1px solid #e2e8f0', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 16,
+            boxShadow: '0 1px 4px rgba(0, 0, 0, 0.02)'
+          }}
+        >
+          <div 
+            style={{ 
+              width: 50, 
+              height: 50, 
+              borderRadius: 14, 
+              background: '#ecfdf5', 
+              color: '#059669', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
+          >
+            <ShieldCheck size={26} strokeWidth={2.2} />
+          </div>
+          <div>
+            <div style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>Administered & Certified</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', lineHeight: 1.2, marginTop: 2 }}>
+              {doneCount}
             </div>
           </div>
         </div>
       </div>
 
-      {/* KPI Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <div style={{ background: '#fff', padding: 18, borderRadius: 14, border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Syringe size={22} />
-          </div>
-          <div>
-            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>Total Bookings</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#0f172a' }}>{vaccinations.length}</div>
-          </div>
+      {/* 3. Filter Bar & Search Input */}
+      <div 
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 16,
+          marginBottom: 20,
+          flexWrap: 'wrap'
+        }}
+      >
+        {/* Pills */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            onClick={() => setFilter('all')}
+            style={{
+              padding: '9px 18px',
+              borderRadius: 9999,
+              fontSize: 13.5,
+              fontWeight: filter === 'all' ? 700 : 500,
+              backgroundColor: filter === 'all' ? '#0d9488' : '#ffffff',
+              color: filter === 'all' ? '#ffffff' : '#475569',
+              border: filter === 'all' ? 'none' : '1px solid #e2e8f0',
+              cursor: 'pointer',
+              boxShadow: filter === 'all' ? '0 2px 8px rgba(13, 148, 136, 0.25)' : 'none',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            All Bookings ({vaccinations.length})
+          </button>
+
+          <button
+            onClick={() => setFilter('due')}
+            style={{
+              padding: '9px 18px',
+              borderRadius: 9999,
+              fontSize: 13.5,
+              fontWeight: filter === 'due' ? 700 : 500,
+              backgroundColor: filter === 'due' ? '#0d9488' : '#ffffff',
+              color: filter === 'due' ? '#ffffff' : '#475569',
+              border: filter === 'due' ? 'none' : '1px solid #e2e8f0',
+              cursor: 'pointer',
+              boxShadow: filter === 'due' ? '0 2px 8px rgba(13, 148, 136, 0.25)' : 'none',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            Due / Pending ({dueCount})
+          </button>
+
+          <button
+            onClick={() => setFilter('administered')}
+            style={{
+              padding: '9px 18px',
+              borderRadius: 9999,
+              fontSize: 13.5,
+              fontWeight: filter === 'administered' ? 700 : 500,
+              backgroundColor: filter === 'administered' ? '#0d9488' : '#ffffff',
+              color: filter === 'administered' ? '#ffffff' : '#475569',
+              border: filter === 'administered' ? 'none' : '1px solid #e2e8f0',
+              cursor: 'pointer',
+              boxShadow: filter === 'administered' ? '0 2px 8px rgba(13, 148, 136, 0.25)' : 'none',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            Administered ({doneCount})
+          </button>
         </div>
 
-        <div style={{ background: '#fff', padding: 18, borderRadius: 14, border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: '#fff7ed', color: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Clock size={22} />
-          </div>
-          <div>
-            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>Due / Dispatches Pending</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#ea580c' }}>{dueCount}</div>
-          </div>
-        </div>
-
-        <div style={{ background: '#fff', padding: 18, borderRadius: 14, border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <CheckCircle2 size={22} />
-          </div>
-          <div>
-            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>Administered & Certified</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#059669' }}>{doneCount}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div style={{
-        background: '#fff',
-        padding: '12px 16px',
-        borderRadius: 14,
-        border: '1px solid #e2e8f0',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: 12,
-        marginBottom: 20
-      }}>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {(['all', 'due', 'administered'] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setFilter(tab)}
-              style={{
-                padding: '8px 14px',
-                borderRadius: 8,
-                fontSize: 13,
-                fontWeight: filter === tab ? 700 : 500,
-                backgroundColor: filter === tab ? '#059669' : '#f1f5f9',
-                color: filter === tab ? '#fff' : '#475569',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              {tab === 'all' && `All Bookings (${vaccinations.length})`}
-              {tab === 'due' && `Due / Pending (${dueCount})`}
-              {tab === 'administered' && `Administered (${doneCount})`}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ position: 'relative', width: 280 }}>
-          <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: 10, top: 11 }} />
+        {/* Search Field */}
+        <div style={{ position: 'relative', width: 330, maxWidth: '100%' }}>
+          <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             placeholder="Search farmer, animal tag, vaccine..."
@@ -283,121 +491,173 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
               width: '100%',
-              padding: '8px 12px 8px 34px',
-              borderRadius: 8,
+              padding: '9px 16px 9px 38px',
+              borderRadius: 9999,
               border: '1px solid #cbd5e1',
-              fontSize: 13,
-              outline: 'none'
+              backgroundColor: '#ffffff',
+              fontSize: 13.5,
+              outline: 'none',
+              color: '#1e293b',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)'
             }}
           />
         </div>
       </div>
 
-      {/* Bookings List */}
+      {/* 4. Bookings Card List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {filtered.length === 0 ? (
-          <div style={{
-            background: '#fff',
-            borderRadius: 14,
-            border: '1px solid #e2e8f0',
-            padding: '48px 24px',
-            textAlign: 'center',
-            color: '#64748b'
-          }}>
-            <Syringe size={42} style={{ margin: '0 auto 12px', opacity: 0.4 }} />
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#334155' }}>No Vaccination Bookings Found</h3>
-            <p style={{ fontSize: 13 }}>Requests submitted by farmers will appear here for doorstep dispatch and verification.</p>
+          <div 
+            style={{
+              background: '#ffffff',
+              borderRadius: 16,
+              border: '1px solid #e2e8f0',
+              padding: '54px 24px',
+              textAlign: 'center',
+              color: '#64748b'
+            }}
+          >
+            <Syringe size={46} style={{ margin: '0 auto 14px', opacity: 0.35, color: '#0d9488' }} />
+            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#334155' }}>No Vaccination Bookings Found</h3>
+            <p style={{ fontSize: 13.5, margin: '6px 0 0' }}>
+              Requests submitted by farmers will appear here for doorstep dispatch and verification.
+            </p>
           </div>
         ) : (
-          filtered.map(b => {
+          filtered.map((b, index) => {
             const isDone = isCompletedStatus(b.status);
-            const isAccepted = b.status === 'ACCEPTED' || b.status === 'OUT_FOR_VACCINATION';
-            const isPendingAccept = b.status === 'REQUESTED' || b.status === 'CONFIRMED' || b.status === 'Confirmed';
+            const isAccepted = isAcceptedStatus(b.status);
+            const isPendingAccept = !isDone && !isAccepted;
+            const theme = getVaccineTheme(b.vaccineName, index);
 
             return (
               <div
                 key={b.id || b.bookingId}
                 style={{
-                  background: '#fff',
-                  borderRadius: 14,
+                  background: '#ffffff',
+                  borderRadius: 16,
                   border: '1px solid #e2e8f0',
-                  padding: '18px 20px',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+                  padding: '20px 24px',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   flexWrap: 'wrap',
-                  gap: 16
+                  gap: 18,
+                  transition: 'border-color 0.15s ease'
                 }}
               >
-                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                  <div style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 12,
-                    background: isDone ? '#ecfdf5' : isAccepted ? '#eff6ff' : '#fff7ed',
-                    color: isDone ? '#059669' : isAccepted ? '#2563eb' : '#ea580c',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                  }}>
-                    <Syringe size={24} />
+                {/* Left Block: Icon & Content */}
+                <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start', flex: 1, minWidth: 320 }}>
+                  {/* Round Colored Syringe Icon */}
+                  <div 
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: '50%',
+                      background: isDone ? '#ecfdf5' : theme.bg,
+                      color: isDone ? '#059669' : theme.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    <Syringe size={24} strokeWidth={2.3} />
                   </div>
 
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
-                      <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
+                  {/* Booking Metadata */}
+                  <div style={{ flex: 1 }}>
+                    {/* Title & Status Pill */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6, flexWrap: 'wrap' }}>
+                      <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 800, color: '#0f172a' }}>
                         {b.vaccineName}
                       </h3>
-                      <span style={{
-                        padding: '3px 8px',
-                        borderRadius: 6,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        backgroundColor: isDone ? '#d1fae5' : isAccepted ? '#dbeafe' : '#ffedd5',
-                        color: isDone ? '#065f46' : isAccepted ? '#1e40af' : '#c2410c'
-                      }}>
-                        {isDone ? 'Administered & Certified' : isAccepted ? 'Paravet Dispatched' : 'Pending Acceptance'}
-                      </span>
-                      {b.bookingId && (
-                        <span style={{
-                          padding: '3px 8px',
-                          borderRadius: 6,
+
+                      <span 
+                        style={{
+                          padding: '3px 10px',
+                          borderRadius: 9999,
                           fontSize: 11,
                           fontWeight: 700,
-                          backgroundColor: '#f1f5f9',
-                          color: '#475569'
-                        }}>
-                          {b.bookingId}
-                        </span>
-                      )}
+                          backgroundColor: isDone ? '#d1fae5' : isAccepted ? '#dbeafe' : '#ffedd5',
+                          color: isDone ? '#065f46' : isAccepted ? '#1e40af' : '#c2410c'
+                        }}
+                      >
+                        {isDone ? 'Administered & Certified' : isAccepted ? 'Paravet Dispatched' : 'Pending Acceptance'}
+                      </span>
                     </div>
 
-                    <div style={{ fontSize: 13, color: '#334155', fontWeight: 600, display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 4 }}>
-                      <span>Animal: <strong>{b.animalName}</strong> ({b.species})</span>
-                      <span>Ear Tag: <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, color: '#0f766e' }}>{b.animalTag}</code></span>
-                      <span>Farmer: <strong>{b.farmerName}</strong></span>
+                    {/* Metadata Line 1: Animal, Ear Tag, Farmer, Phone */}
+                    <div 
+                      style={{ 
+                        fontSize: 13, 
+                        color: '#334155', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 16, 
+                        flexWrap: 'wrap' 
+                      }}
+                    >
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <User size={13} color="#94a3b8" />
+                        Animal: <strong>{b.animalName} ({b.species})</strong>
+                      </span>
+
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Tag size={13} color="#94a3b8" />
+                        Ear Tag:{' '}
+                        <code 
+                          style={{ 
+                            background: '#ecfdf5', 
+                            color: '#047857', 
+                            border: '1px solid #a7f3d0', 
+                            padding: '2px 7px', 
+                            borderRadius: 6, 
+                            fontWeight: 700, 
+                            fontFamily: 'monospace',
+                            fontSize: 12 
+                          }}
+                        >
+                          {b.animalTag}
+                        </code>
+                      </span>
+
+                      <span>
+                        Farmer: <strong>{b.farmerName}</strong>
+                      </span>
+
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#475569' }}>
                         <Phone size={13} color="#64748b" /> {b.farmerPhone}
                       </span>
                     </div>
 
-                    <div style={{ fontSize: 12, color: '#64748b', display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 6 }}>
+                    {/* Metadata Line 2: Address, Date/Slot, Batch Lot, Cert */}
+                    <div 
+                      style={{ 
+                        fontSize: 12, 
+                        color: '#64748b', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 16, 
+                        flexWrap: 'wrap', 
+                        marginTop: 7 
+                      }}
+                    >
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        <MapPin size={13} color="#059669" /> {b.doorstepAddress || b.village}
+                        <MapPin size={13} color="#0d9488" /> {b.doorstepAddress || b.village}
                       </span>
+
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        <Calendar size={13} /> {b.bookedDate} • {b.slot}
+                        <Calendar size={13} color="#64748b" /> {b.bookedDate} • {b.slot}
                       </span>
-                      <span>Batch: <strong style={{ color: '#475569' }}>{b.batchNumber || 'VAC-2026'}</strong></span>
-                      {b.assignedVaccinatorName && (
-                        <span style={{ color: '#1d4ed8', fontWeight: 700 }}>
-                          Field Paravet: {b.assignedVaccinatorName}
-                        </span>
-                      )}
+
+                      <span>
+                        Batch: <strong style={{ color: '#334155' }}>{b.batchNumber || 'VAC-BIO-2026'}</strong>
+                      </span>
+
                       {b.certificateId && (
-                        <span style={{ color: '#059669', fontWeight: 700 }}>
+                        <span style={{ color: '#059669', fontWeight: 800 }}>
                           Cert: {b.certificateId}
                         </span>
                       )}
@@ -405,15 +665,16 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
                   </div>
                 </div>
 
-                <div>
+                {/* Right Action Button */}
+                <div style={{ flexShrink: 0 }}>
                   {isPendingAccept && (
                     <button
                       onClick={() => handleOpenAssignModal(b)}
                       style={{
-                        background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                        color: '#fff',
+                        background: '#2563eb',
+                        color: '#ffffff',
                         border: 'none',
-                        padding: '10px 18px',
+                        padding: '11px 20px',
                         borderRadius: 10,
                         fontWeight: 700,
                         fontSize: 13.5,
@@ -421,10 +682,13 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                         gap: 8,
-                        boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)'
+                        boxShadow: '0 4px 12px rgba(37, 99, 235, 0.22)',
+                        transition: 'background 0.15s ease'
                       }}
                     >
-                      <UserCheck size={16} /> Accept & Assign Paravet
+                      <UserCheck size={16} /> 
+                      <span>Accept & Assign Paravet</span>
+                      <ChevronRight size={15} style={{ marginLeft: 2 }} />
                     </button>
                   )}
 
@@ -432,10 +696,10 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
                     <button
                       onClick={() => handleOpenOtpModal(b)}
                       style={{
-                        background: 'linear-gradient(135deg, #059669 0%, #0d9488 100%)',
-                        color: '#fff',
+                        background: '#059669',
+                        color: '#ffffff',
                         border: 'none',
-                        padding: '10px 18px',
+                        padding: '11px 20px',
                         borderRadius: 10,
                         fontWeight: 700,
                         fontSize: 13.5,
@@ -443,28 +707,39 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                         gap: 8,
-                        boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)'
+                        boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
+                        transition: 'background 0.15s ease'
                       }}
                     >
-                      <KeyRound size={16} /> Verify Doorstep OTP & Certify
+                      <KeyRound size={16} /> 
+                      <span>Verify Doorstep OTP & Certify</span>
+                      <ChevronRight size={15} style={{ marginLeft: 2 }} />
                     </button>
                   )}
 
                   {isDone && (
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '8px 14px',
-                      borderRadius: 8,
-                      background: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      color: '#059669',
-                      fontWeight: 700,
-                      fontSize: 13
-                    }}>
-                      <CheckCircle2 size={16} /> Certified Official Dose
-                    </div>
+                    <button
+                      onClick={() => setSelectedCertBooking(b)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '10px 18px',
+                        borderRadius: 10,
+                        background: '#ecfdf5',
+                        border: '1px solid #a7f3d0',
+                        color: '#059669',
+                        fontWeight: 700,
+                        fontSize: 13.5,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                      title="Click to view official digital certificate"
+                    >
+                      <CheckCircle2 size={16} color="#059669" /> 
+                      <span>Certified Official Dose</span>
+                      <ChevronRight size={15} color="#059669" />
+                    </button>
                   )}
                 </div>
               </div>
@@ -473,18 +748,18 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
         )}
       </div>
 
-      {/* Modal 1: Accept & Assign Paravet */}
+      {/* MODAL 1: Accept & Assign Paravet */}
       {assignModalBooking && (
         <div className="modal-overlay" onClick={() => setAssignModalBooking(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 500, borderRadius: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <UserCheck size={22} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>Assign Field Paravet</h3>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>Booking ID: {assignModalBooking.bookingId || assignModalBooking.id}</div>
+                  <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', margin: 0 }}>Assign Field Paravet</h3>
+                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>Booking: {assignModalBooking.bookingId || assignModalBooking.id}</div>
                 </div>
               </div>
               <button onClick={() => setAssignModalBooking(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8' }}>
@@ -500,7 +775,7 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
               )}
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>
                   Field Paravet / Vaccinator Name
                 </label>
                 <input
@@ -508,12 +783,12 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
                   required
                   value={vaccinatorName}
                   onChange={e => setVaccinatorName(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13.5, outline: 'none' }}
                 />
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>
                   Paravet Contact Phone
                 </label>
                 <input
@@ -521,13 +796,13 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
                   required
                   value={vaccinatorPhone}
                   onChange={e => setVaccinatorPhone(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13.5, outline: 'none' }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>
                     Biological Batch No.
                   </label>
                   <input
@@ -535,11 +810,11 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
                     required
                     value={batchLot}
                     onChange={e => setBatchLot(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13.5, outline: 'none' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>
                     Cold-Chain Status
                   </label>
                   <input
@@ -547,25 +822,25 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
                     required
                     value={coldChainStatus}
                     onChange={e => setColdChainStatus(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13.5, outline: 'none' }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+              <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
                 <button
                   type="button"
                   onClick={() => setAssignModalBooking(null)}
-                  style={{ flex: 1, padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#fff', color: '#475569', fontWeight: 600, cursor: 'pointer' }}
+                  style={{ flex: 1, padding: '11px 16px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#fff', color: '#475569', fontWeight: 600, cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isAssigning}
-                  style={{ flex: 2, padding: '10px 14px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+                  style={{ flex: 2, padding: '11px 16px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
                 >
-                  {isAssigning ? 'Assigning...' : 'Confirm & Dispatch Paravet'}
+                  {isAssigning ? 'Dispatching...' : 'Confirm & Dispatch Paravet'}
                 </button>
               </div>
             </form>
@@ -573,18 +848,18 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
         </div>
       )}
 
-      {/* Modal 2: Verify Doorstep OTP & Certify */}
+      {/* MODAL 2: Verify Doorstep OTP & Certify */}
       {verifyOtpModalBooking && (
         <div className="modal-overlay" onClick={() => setVerifyOtpModalBooking(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 460 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 460, borderRadius: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <ShieldCheck size={22} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ShieldCheck size={24} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>Verify Doorstep OTP</h3>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>Booking ID: {verifyOtpModalBooking.bookingId || verifyOtpModalBooking.id}</div>
+                  <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', margin: 0 }}>Verify Doorstep OTP</h3>
+                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>Booking: {verifyOtpModalBooking.bookingId || verifyOtpModalBooking.id}</div>
                 </div>
               </div>
               <button onClick={() => setVerifyOtpModalBooking(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8' }}>
@@ -599,13 +874,15 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
                 </div>
               )}
 
-              <div style={{
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: 10,
-                padding: '12px 14px',
-                marginBottom: 16
-              }}>
+              <div 
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 10,
+                  padding: '12px 14px',
+                  marginBottom: 16
+                }}
+              >
                 <div style={{ fontSize: 13, color: '#334155' }}>
                   Animal: <strong>{verifyOtpModalBooking.animalName}</strong> ({verifyOtpModalBooking.animalTag})
                 </div>
@@ -617,9 +894,9 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
                 </div>
               </div>
 
-              <div style={{ marginBottom: 14, textAlign: 'center' }}>
+              <div style={{ marginBottom: 16, textAlign: 'center' }}>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#1e293b', marginBottom: 8 }}>
-                  Enter 4-Digit Doorstep Verification OTP
+                  Enter 4-Digit Farmer Verification OTP
                 </label>
                 <input
                   type="text"
@@ -638,46 +915,215 @@ export const VaccinationQueueView: React.FC<VaccinationQueueViewProps> = ({
                     borderRadius: 10,
                     border: '2px solid #059669',
                     outline: 'none',
-                    margin: '0 auto'
+                    margin: '0 auto',
+                    display: 'block'
                   }}
                 />
                 <div style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>
-                  (Obtained from the farmer's Pashu Seva app at the time of vaccination)
+                  (Shown on the farmer's mobile screen upon vaccinator arrival)
                 </div>
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
-                  Administration Remarks
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>
+                  Clinical Administration Remarks
                 </label>
                 <input
                   type="text"
                   value={remarks}
                   onChange={e => setRemarks(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13 }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none' }}
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+              <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
                 <button
                   type="button"
                   onClick={() => setVerifyOtpModalBooking(null)}
-                  style={{ flex: 1, padding: '10px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#fff', color: '#475569', fontWeight: 600, cursor: 'pointer' }}
+                  style={{ flex: 1, padding: '11px 16px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#fff', color: '#475569', fontWeight: 600, cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isVerifying}
-                  style={{ flex: 2, padding: '10px 14px', borderRadius: 8, border: 'none', background: '#059669', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+                  style={{ flex: 2, padding: '11px 16px', borderRadius: 8, border: 'none', background: '#059669', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
                 >
-                  {isVerifying ? 'Verifying & Certifying...' : 'Verify OTP & Issue Certificate'}
+                  {isVerifying ? 'Certifying...' : 'Verify OTP & Issue Certificate'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* MODAL 3: Official Vaccination Certificate Preview */}
+      {selectedCertBooking && (
+        <div className="modal-overlay" onClick={() => setSelectedCertBooking(null)}>
+          <div 
+            className="modal-content" 
+            onClick={e => e.stopPropagation()} 
+            style={{ 
+              maxWidth: 580, 
+              borderRadius: 18, 
+              padding: '28px 32px',
+              border: '2px solid #a7f3d0',
+              background: '#ffffff'
+            }}
+          >
+            {/* Header with Seal */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #e2e8f0', paddingBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <img 
+                  src="/assets/state_seal.png" 
+                  alt="State Seal" 
+                  style={{ width: 44, height: 44, objectFit: 'contain' }}
+                  onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                />
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#0d9488', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                    Government of Maharashtra • Animal Husbandry
+                  </div>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', margin: '2px 0 0' }}>
+                    Official Livestock Immunization Certificate
+                  </h2>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedCertBooking(null)}
+                style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Certificate ID Pill & Ribbon */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 18, marginBottom: 18 }}>
+              <div>
+                <span style={{ fontSize: 12, color: '#64748b' }}>Certificate Number:</span>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#059669', letterSpacing: '0.04em' }}>
+                  {selectedCertBooking.certificateId || 'CERT-VAC-2026-771920'}
+                </div>
+              </div>
+              <img 
+                src="/assets/icon-verified-ribbon.png" 
+                alt="Verified Ribbon"
+                style={{ width: 40, height: 40, objectFit: 'contain' }}
+                onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+              />
+            </div>
+
+            {/* Structured Certificate Data */}
+            <div style={{ background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', padding: 18, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>ANIMAL NAME & SPECIES</span>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginTop: 2 }}>
+                  {selectedCertBooking.animalName} ({selectedCertBooking.species})
+                </div>
+              </div>
+
+              <div>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>UNIQUE EAR TAG ID</span>
+                <div style={{ marginTop: 2 }}>
+                  <code style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '2px 8px', borderRadius: 6, fontWeight: 700, fontSize: 13 }}>
+                    {selectedCertBooking.animalTag}
+                  </code>
+                </div>
+              </div>
+
+              <div>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>REGISTERED OWNER</span>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginTop: 2 }}>
+                  {selectedCertBooking.farmerName}
+                </div>
+              </div>
+
+              <div>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>FARM LOCATION</span>
+                <div style={{ fontSize: 13, color: '#334155', marginTop: 2 }}>
+                  {selectedCertBooking.doorstepAddress || selectedCertBooking.village}
+                </div>
+              </div>
+
+              <div style={{ gridColumn: 'span 2', borderTop: '1px dashed #cbd5e1', paddingTop: 12 }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>VACCINE ADMINISTERED</span>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#0d9488', marginTop: 2 }}>
+                  {selectedCertBooking.vaccineName}
+                </div>
+              </div>
+
+              <div>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>BATCH / LOT NUMBER</span>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0f172a', marginTop: 2 }}>
+                  {selectedCertBooking.batchNumber || 'VAC-BIO-BQ-9042'}
+                </div>
+              </div>
+
+              <div>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>COLD-CHAIN COMPLIANCE</span>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: '#059669', marginTop: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <CheckCircle2 size={14} color="#059669" />
+                  {selectedCertBooking.coldChainStatus || '2°C - 8°C Verified'}
+                </div>
+              </div>
+
+              <div>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>ADMINISTERED DATE</span>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0f172a', marginTop: 2 }}>
+                  {selectedCertBooking.bookedDate}
+                </div>
+              </div>
+
+              <div>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>CERTIFIED BY</span>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0f172a', marginTop: 2 }}>
+                  {selectedCertBooking.administeredBy || currentUser.name}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 22 }}>
+              <button
+                onClick={() => setSelectedCertBooking(null)}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: 8,
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#475569',
+                  fontWeight: 600,
+                  fontSize: 13.5,
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+              <button
+                onClick={() => window.print()}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: '#059669',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: 13.5,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)'
+                }}
+              >
+                <Printer size={16} /> Print Official Certificate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+export default VaccinationQueueView;
